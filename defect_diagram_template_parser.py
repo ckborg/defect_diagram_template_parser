@@ -3,6 +3,7 @@ from elements import elements_dict
 from pypif import pif
 from pypif.obj import *
 from citrination_client import PifSystemReturningQuery
+from citrination_client import CitrinationClient
 
 def calc_defect_enthalpy(enthalpies_at_corner, enthaply_at_mu_0, defect_type, defect_site):
 
@@ -17,7 +18,7 @@ def calc_defect_enthalpy(enthalpies_at_corner, enthaply_at_mu_0, defect_type, de
     else:
         defect_enthalpy = float(enthaply_at_mu_0)+1*float(enthalpies_at_corner[defect_site])+(-1)*float(enthalpies_at_corner[defect_type])
 
-    return defect_enthalpy
+    return round(defect_enthalpy, 4)
 
 
 def get_values(defect_template):
@@ -57,13 +58,18 @@ def parse_template(defect_template):
         enthalpies.append(enthaplies_at_corner)
 
     count = 0
+    print "ENTHAPLIES: ", enthalpies
     for corner in enthalpies:
         print corner
         count += 1
         system = ChemicalSystem()
         system.chemical_formula = "".join(atoms)
         system.properties = []
-        system.ids = [Id(name="Corner", value=count)]
+        system.ids = []
+
+        for k, v in corner.iteritems():
+            if v == "0":
+                system.ids.append(Id(name="Corner", value=k+"-rich"))
         print pif.dumps(system.ids)
         print system.chemical_formula
 
@@ -71,20 +77,26 @@ def parse_template(defect_template):
 
         for k, v in entries.iteritems():
             if len(k.split("_")) > 3:
-
                 defect_type = k.split("_")[0]
                 site = k.split("_")[1]
                 charge = k.split("_")[2]
                 index = k.split("_")[3]
                 y1_enthalpy_at_0 = calc_defect_enthalpy(corner, v, defect_type, site)
-                y2_enthalpy_at_ef = float(charge)*float(band_gap)+float(y1_enthalpy_at_0)
+                y2_enthalpy_at_ef = round(float(charge)*float(band_gap)+float(y1_enthalpy_at_0), 4)
                 print "DEFECT ENTHALPY: ", k, y1_enthalpy_at_0, y2_enthalpy_at_ef
-                system.properties.append(Property(name="Defect enthalpy", scalars=y1_enthalpy_at_0))
-                system.properties.append(Property(name="Defect type", scalars=defect_type))
-                system.properties.append(Property(name="Defect site", scalars=site))
-                system.properties.append(Property(name="Defect charge", scalars=charge))
-                system.properties.append(Property(name="Defect index", scalars=index))
-                system.properties.append(Property(name="$\delta$H", scalars=[y1_enthalpy_at_0, y2_enthalpy_at_ef], conditions=[Value(name="E$_F$", scalars=[0, band_gap])]))
+                system.properties.append(Property(name="$\Delta$H", scalars=[y1_enthalpy_at_0, y2_enthalpy_at_ef], conditions=[Value(name="E$_F$", scalars=[0, band_gap])]))
+
+
+                defect_enthalpy_prop = Property(name="Defect Enthalpy", scalars=y1_enthalpy_at_0)
+                defect_enthalpy_prop.conditions = []
+                defect_enthalpy_prop.conditions.append(Value(name="Defect type", scalars=defect_type))
+                defect_enthalpy_prop.conditions.append(Value(name="Defect site", scalars=site))
+                defect_enthalpy_prop.conditions.append(Value(name="Defect charge", scalars=charge))
+                defect_enthalpy_prop.conditions.append(Value(name="Defect index", scalars=index))
+                defect_enthalpy_prop.conditions.append(Value(name="Defect label", scalars=k))
+
+                system.properties.append(defect_enthalpy_prop)
+
 
         systems.append(system)
 
