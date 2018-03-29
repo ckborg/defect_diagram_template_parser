@@ -2,8 +2,6 @@ import argparse
 from elements import elements_dict
 from pypif import pif
 from pypif.obj import *
-from citrination_client import PifSystemReturningQuery
-from citrination_client import CitrinationClient
 
 def calc_defect_enthalpy(enthalpies_at_corner, enthaply_at_mu_0, defect_type, defect_site):
 
@@ -58,9 +56,9 @@ def parse_template(defect_template):
         enthalpies.append(enthaplies_at_corner)
 
     count = 0
-    print "ENTHAPLIES: ", enthalpies
+    print("ENTHAPLIES: ", enthalpies)
     for corner in enthalpies:
-        print corner
+        print(corner)
         count += 1
         system = ChemicalSystem()
         system.chemical_formula = "".join(atoms)
@@ -70,10 +68,10 @@ def parse_template(defect_template):
         for k, v in corner.iteritems():
             if v == "0":
                 system.ids.append(Id(name="Corner", value=k+"-rich"))
-        print pif.dumps(system.ids)
-        print system.chemical_formula
+        print(pif.dumps(system.ids))
+        print(system.chemical_formula)
 
-        print "Values at Corner: ", corner
+        print("Values at Corner: ", corner)
 
         for k, v in entries.iteritems():
             if len(k.split("_")) > 3:
@@ -83,7 +81,7 @@ def parse_template(defect_template):
                 index = k.split("_")[3]
                 y1_enthalpy_at_0 = calc_defect_enthalpy(corner, v, defect_type, site)
                 y2_enthalpy_at_ef = round(float(charge)*float(band_gap)+float(y1_enthalpy_at_0), 4)
-                print "DEFECT ENTHALPY: ", k, y1_enthalpy_at_0, y2_enthalpy_at_ef
+                print("DEFECT ENTHALPY: ", k, y1_enthalpy_at_0, y2_enthalpy_at_ef)
                 system.properties.append(Property(name="$\Delta$H", scalars=[y1_enthalpy_at_0, y2_enthalpy_at_ef], conditions=[Value(name="E$_F$", scalars=[0, band_gap])]))
 
 
@@ -114,5 +112,5 @@ if __name__ == "__main__":
         pifs = parse_template(f)
         outfile = f.replace(".csv", ".json")
         pif.dump(pifs, open(outfile, "w"))
-        print "PIF DUMPED: ", outfile
+        print("PIF DUMPED: ", outfile)
 
