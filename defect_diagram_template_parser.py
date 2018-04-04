@@ -23,7 +23,7 @@ def get_values(defect_template):
 
     entries = {}
 
-    for line in open(defect_template, "rb").readlines():
+    for line in open(defect_template, "r").readlines():
         line = line.strip("\r\n")
         if line.split(",")[0] != "":
             entries[line.split(",")[0]] = line.split(",")[1]
@@ -41,7 +41,7 @@ def parse_template(defect_template):
 
     band_gap = entries['bg']
 
-    for k, v in entries.iteritems():
+    for k, v in entries.items():
 
         if len(k.split("-")) > 1:
             if k.split("-")[0] in elements_dict.values() and k.split("-")[0] not in atoms:
@@ -65,7 +65,7 @@ def parse_template(defect_template):
         system.properties = []
         system.ids = []
 
-        for k, v in corner.iteritems():
+        for k, v in corner.items():
             if v == "0":
                 system.ids.append(Id(name="Corner", value=k+"-rich"))
         print(pif.dumps(system.ids))
@@ -73,7 +73,7 @@ def parse_template(defect_template):
 
         print("Values at Corner: ", corner)
 
-        for k, v in entries.iteritems():
+        for k, v in entries.items():
             if len(k.split("_")) > 3:
                 defect_type = k.split("_")[0]
                 site = k.split("_")[1]
